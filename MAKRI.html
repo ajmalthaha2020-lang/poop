@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe: Anand Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617;
+            --card: rgba(255, 255, 255, 0.03);
+            --primary: #38bdf8; 
+            --secondary: #fb7185; 
+            --accent: #818cf8;
+            --text: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Animated Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+        }
+
+        /* Container & Glassmorphism */
+        .glass-panel {
+            background: var(--card);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            z-index: 10;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        /* The Board */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 110px);
+            grid-template-rows: repeat(3, 110px);
+            gap: 12px;
+            margin: 25px 0;
+        }
+
+        .cell {
+            width: 110px;
+            height: 110px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .cell:hover:not(.taken) {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .cell.x { color: var(--secondary); text-shadow: 0 0 20px var(--secondary); }
+
+        /* Anand's Visuals */
+        .anand-avatar {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), pulse 2s infinite;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 16px 48px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 100px;
+            border: none;
+            cursor: pointer;
+            background: var(--text);
+            color: var(--bg);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.5);
+        }
+
+        /* Result Styles */
+        .result-title { font-size: 3.5rem; margin-bottom: 20px; }
+        .win { color: var(--primary); }
+        .lose { color: var(--secondary); }
+        
+        /* Shake effect for losing */
+        .shake { animation: shake 0.5s linear; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+    <audio id="loseSound" src="anand_voice.aac"></audio>
+
+    <div class="glass-panel">
+        <div class="screen active" id="menu-screen">
+            <h1>MEGAMIND ANAND</h1>
+            <p style="margin-bottom: 30px; color: #94a3b8;">The most advanced Tic-Tac-Toe AI ever built.</p>
+            <button class="btn" onclick="startGame()">ARE YOU READY?</button>
+        </div>
+
+        <div class="screen" id="game-screen">
+            <div id="status" style="font-size: 0.9rem; letter-spacing: 2px; color: var(--primary);">YOUR TURN (X)</div>
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            <button class="btn" style="padding: 10px 30px; font-size: 0.8rem;" onclick="resetGame()">SURRENDER</button>
+        </div>
+
+        <div class="screen" id="result-screen">
+            <h2 class="result-title" id="res-title">DRAW</h2>
+            <p id="res-desc" style="margin-bottom: 30px; color: #94a3b8;"></p>
+            <button class="btn" onclick="startGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        const statusText = document.getElementById('status');
+        const boardCells = document.querySelectorAll('.cell');
+        const loseSound = document.getElementById('loseSound');
+        
+        let board = ["", "", "", "", "", "", "", "", ""];
+        const player = "X";
+        const anand = "O";
+        let isGameActive = false;
+
+        // 1. Particle Background Logic
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+
+        let particles = [];
+        for(let i=0; i<100; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5 });
+        function animateBg() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+                ctx.fill();
+                p.y -= p.speed;
+                if(p.y < 0) p.y = canvas.height;
+            });
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        // 2. Game Navigation
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function startGame() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            boardCells.forEach(c => { c.innerHTML = ""; c.className = "cell"; });
+            isGameActive = true;
+            statusText.innerText = "YOUR TURN (X)";
+            showScreen('game-screen');
+        }
+
+        function resetGame() { showScreen('menu-screen'); }
+
+        // 3. Gameplay Logic
+        boardCells.forEach(c => c.addEventListener('click', (e) => {
+            const idx = e.target.dataset.index;
+            if(!isGameActive || board[idx] !== "") return;
+
+            makeMove(idx, player);
+            if(checkWin(board, player)) return end('win');
+            if(isBoardFull(board)) return end('draw');
+
+            statusText.innerText = "ANAND IS ANALYZING...";
+            isGameActive = false; // Prevent player from clicking during AI turn
+
+            setTimeout(() => {
+                const bestIdx = minimax(board, anand).index;
+                makeMove(bestIdx, anand);
+                if(checkWin(board, anand)) end('lose');
+                else if(isBoardFull(board)) end('draw');
+                else {
+                    statusText.innerText = "YOUR TURN (X)";
+                    isGameActive = true;
+                }
+            }, 800);
+        }));
+
+        function makeMove(idx, p) {
+            board[idx] = p;
+            const cell = boardCells[idx];
+            cell.classList.add('taken');
+            if(p === player) {
+                cell.innerText = "X";
+                cell.classList.add('x');
+            } else {
+                const img = document.createElement('img');
+                img.src = "anand.jpg";
+                img.className = "anand-avatar";
+                cell.appendChild(img);
+            }
+        }
+
+        function end(res) {
+            const title = document.getElementById('res-title');
+            const desc = document.getElementById('res-desc');
+            const panel = document.querySelector('.glass-panel');
+
+            if(res === 'win') {
+                title.innerText = "YOU WON!";
+                title.className = "result-title win";
+                desc.innerText = "You have bypassed Anand's logic circuits.";
+                loseSound.play();
+            } else if(res === 'lose') {
+                title.innerText = "DEFEATED";
+                title.className = "result-title lose";
+                desc.innerText = "Anand predicted every move you made.";
+                panel.classList.add('shake');
+                setTimeout(() => panel.classList.remove('shake'), 500);
+            } else {
+                title.innerText = "DRAW";
+                title.className = "result-title";
+                desc.innerText = "A digital stalemate.";
+            }
+            setTimeout(() => showScreen('result-screen'), 1000);
+        }
+
+        // 4. Intelligence (Minimax)
+        function checkWin(b, p) {
+            const ways = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return ways.some(w => w.every(i => b[i] === p));
+        }
+        function isBoardFull(b) { return b.every(s => s !== ""); }
+
+        function minimax(newBoard, p) {
+            const avail = newBoard.map((s,i) => s === "" ? i : null).filter(s => s !== null);
+            if(checkWin(newBoard, player)) return {score: -10};
+            if(checkWin(newBoard, anand)) return {score: 10};
+            if(avail.length === 0) return {score: 0};
+
+            const moves = [];
+            for(let i=0; i<avail.length; i++) {
+                let move = {index: avail[i]};
+                newBoard[avail[i]] = p;
+                move.score = minimax(newBoard, p === anand ? player : anand).score;
+                newBoard[avail[i]] = "";
+                moves.push(move);
+            }
+            let bestMove;
+            if(p === anand) {
+                let bestScore = -Infinity;
+                moves.forEach((m, i) => { if(m.score > bestScore) { bestScore = m.score; bestMove = i; }});
+            } else {
+                let bestScore = Infinity;
+                moves.forEach((m, i) => { if(m.score < bestScore) { bestScore = m.score; bestMove = i; }});
+            }
+            return moves[bestMove];
+        }
+    </script>
+</body>
+</html>
