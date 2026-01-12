@@ -2,345 +2,301 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic Tac Toe: Anand Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE GREAT FLUSH: MASTERPIECE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;800&family=Meera&family=Syncopate:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #020617;
-            --card: rgba(255, 255, 255, 0.03);
-            --primary: #38bdf8; 
-            --secondary: #fb7185; 
-            --accent: #818cf8;
-            --text: #f8fafc;
+            --bg: #05070a;
+            --accent: #e67e22;
+            --white: #f8f9fa;
+            --error: #ff4757;
+            --success: #2ed573;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: var(--bg); color: var(--white);
+            font-family: 'Outfit', sans-serif; overflow: hidden; touch-action: none;
         }
-
-        /* Animated Background */
-        #bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
-        }
-
-        /* Container & Glassmorphism */
-        .glass-panel {
-            background: var(--card);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 32px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            z-index: 10;
-        }
-
-        .screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .screen.active { display: flex; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            font-size: 4rem;
-            font-weight: 900;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        /* The Board */
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 110px);
-            grid-template-rows: repeat(3, 110px);
-            gap: 12px;
-            margin: 25px 0;
-        }
-
-        .cell {
-            width: 110px;
-            height: 110px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .cell:hover:not(.taken) {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-            border-color: var(--primary);
-        }
-
-        .cell.x { color: var(--secondary); text-shadow: 0 0 20px var(--secondary); }
-
-        /* Anand's Visuals */
-        .anand-avatar {
-            width: 80%;
-            height: 80%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--primary);
-            box-shadow: 0 0 15px var(--primary);
-            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), pulse 2s infinite;
-        }
-
-        @keyframes bounceIn {
-            0% { transform: scale(0); }
-            70% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 16px 48px;
-            font-family: inherit;
-            font-weight: 600;
-            font-size: 1.1rem;
-            border-radius: 100px;
-            border: none;
-            cursor: pointer;
-            background: var(--text);
-            color: var(--bg);
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: scale(1.05);
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.5);
-        }
-
-        /* Result Styles */
-        .result-title { font-size: 3.5rem; margin-bottom: 20px; }
-        .win { color: var(--primary); }
-        .lose { color: var(--secondary); }
         
-        /* Shake effect for losing */
-        .shake { animation: shake 0.5s linear; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+        #game-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        canvas { display: block; filter: contrast(115%) saturate(1.3); }
+
+        /* Enhanced Screen Transitions */
+        .screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            background: radial-gradient(circle at center, rgba(13,17,23,0.85), var(--bg));
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+        }
+        .screen.hidden { 
+            opacity: 0; pointer-events: none; transform: scale(1.2) rotate(2deg); filter: blur(20px);
+        }
+
+        /* Start Menu specific animation */
+        #menu-start .malayalam-title {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5)); }
+            50% { transform: translateY(-15px) scale(1.02); filter: drop-shadow(0 25px 25px rgba(0,0,0,0.3)); }
+        }
+
+        .malayalam-title {
+            font-family: 'Meera', sans-serif; font-size: clamp(4.5rem, 20vw, 9rem);
+            margin: 0; line-height: 1; text-align: center;
+            background: linear-gradient(180deg, #fff 40%, #8b4513 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .btn-main {
+            margin-top: 50px; padding: 22px 60px;
+            font-family: 'Meera', sans-serif; font-size: 2.6rem;
+            color: var(--white); background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 25px;
+            cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            line-height: 1; min-width: 300px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
+        }
+        .btn-main:hover { 
+            background: var(--white); color: var(--bg); 
+            transform: scale(1.1); box-shadow: 0 0 50px rgba(255,255,255,0.2);
+        }
+
+        #hud-score {
+            position: absolute; top: 40px; width: 100%; text-align: center;
+            font-weight: 800; font-size: 7rem; opacity: 0.03; letter-spacing: 25px;
+            pointer-events: none; z-index: 10;
+        }
+
+        #progress-container {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 60%; height: 4px; background: rgba(255,255,255,0.05);
+            border-radius: 10px; z-index: 10;
+        }
+        #progress-bar { height: 100%; width: 0%; background: var(--accent); border-radius: 10px; transition: width 0.2s; box-shadow: 0 0 15px var(--accent); }
+
+        /* Lose/Win Overlays */
+        #lose-stain {
+            position: absolute; inset: 0; background: radial-gradient(circle, #5d2e0a 0%, transparent 70%);
+            opacity: 0; pointer-events: none; z-index: 90; transition: opacity 0.5s;
         }
     </style>
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
-    <audio id="loseSound" src="anand_voice.aac"></audio>
+<div id="game-wrapper">
+    <div id="hud-score">00</div>
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="lose-stain"></div>
 
-    <div class="glass-panel">
-        <div class="screen active" id="menu-screen">
-            <h1>MEGAMIND ANAND</h1>
-            <p style="margin-bottom: 30px; color: #94a3b8;">The most advanced Tic-Tac-Toe AI ever built.</p>
-            <button class="btn" onclick="startGame()">ARE YOU READY?</button>
-        </div>
-
-        <div class="screen" id="game-screen">
-            <div id="status" style="font-size: 0.9rem; letter-spacing: 2px; color: var(--primary);">YOUR TURN (X)</div>
-            <div class="board" id="board">
-                <div class="cell" data-index="0"></div>
-                <div class="cell" data-index="1"></div>
-                <div class="cell" data-index="2"></div>
-                <div class="cell" data-index="3"></div>
-                <div class="cell" data-index="4"></div>
-                <div class="cell" data-index="5"></div>
-                <div class="cell" data-index="6"></div>
-                <div class="cell" data-index="7"></div>
-                <div class="cell" data-index="8"></div>
-            </div>
-            <button class="btn" style="padding: 10px 30px; font-size: 0.8rem;" onclick="resetGame()">SURRENDER</button>
-        </div>
-
-        <div class="screen" id="result-screen">
-            <h2 class="result-title" id="res-title">DRAW</h2>
-            <p id="res-desc" style="margin-bottom: 30px; color: #94a3b8;"></p>
-            <button class="btn" onclick="startGame()">PLAY AGAIN</button>
-        </div>
+    <div id="menu-start" class="screen">
+        <div class="malayalam-title">THEETU</div>
+        <button class="btn-main" onclick="Game.start()">തൂറിയാലോ?</button>
+        <p style="margin-top:20px; font-size:0.6rem; letter-spacing:10px; opacity:0.3; font-family:'Syncopate'">MISSION: 50M</p>
     </div>
 
-    <script>
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        const statusText = document.getElementById('status');
-        const boardCells = document.querySelectorAll('.cell');
-        const loseSound = document.getElementById('loseSound');
+    <div id="menu-lose" class="screen hidden">
+        <div class="malayalam-title" style="color: var(--error); -webkit-text-fill-color: var(--error); transform: scale(0.9) rotate(-3deg);">തീട്ടം പറ്റി</div>
+        <button class="btn-main" style="border-color: var(--error);" onclick="Game.start()">ഒന്നുകൂടി</button>
+    </div>
+
+    <div id="menu-win" class="screen hidden">
+        <div class="malayalam-title" style="color: var(--success); -webkit-text-fill-color: var(--success); text-shadow: 0 0 40px rgba(46, 213, 115, 0.4);">വിജയിച്ചു!</div>
+        <button class="btn-main" style="border-color: var(--success);" onclick="Game.start()">ഒന്നുകൂടി</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const Game = {
+    state: 'MENU',
+    score: 0,
+    winTarget: 50,
+    frame: 0,
+    shake: 0,
+    
+    init() {
+        this.canvas = document.getElementById('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.player = { x: 0, y: 0, vx: 0, targetX: 0, radius: 32, jiggle: 0, alive: true };
+        this.walls = [];
+        this.particles = [];
+        this.resize();
         
-        let board = ["", "", "", "", "", "", "", "", ""];
-        const player = "X";
-        const anand = "O";
-        let isGameActive = false;
+        window.addEventListener('resize', () => this.resize());
+        const handleIn = (x) => { if(this.player.alive) this.player.targetX = x; };
+        window.addEventListener('mousemove', e => handleIn(e.clientX));
+        window.addEventListener('touchmove', e => { handleIn(e.touches[0].clientX); e.preventDefault(); }, {passive: false});
 
-        // 1. Particle Background Logic
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.onresize = resize; resize();
+        this.loop();
+    },
 
-        let particles = [];
-        for(let i=0; i<100; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, speed: Math.random()*0.5 });
-        function animateBg() {
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            ctx.fillStyle = "white";
-            particles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                ctx.fill();
-                p.y -= p.speed;
-                if(p.y < 0) p.y = canvas.height;
+    resize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.player.x = this.width / 2;
+        this.player.y = this.height * 0.82; 
+    },
+
+    start() {
+        this.state = 'PLAYING';
+        this.score = 0;
+        this.frame = 0;
+        this.walls = [];
+        this.particles = [];
+        this.player.alive = true;
+        this.player.vx = 0;
+        document.getElementById('lose-stain').style.opacity = "0";
+
+        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+        document.getElementById('hud-score').innerText = "00";
+        document.getElementById('progress-bar').style.width = "0%";
+    },
+
+    gameOver() {
+        this.player.alive = false;
+        this.state = 'DEAD';
+        this.shake = 40;
+        document.getElementById('lose-stain').style.opacity = "0.6";
+        
+        for(let i=0; i<50; i++) {
+            this.particles.push({
+                x: this.player.x, y: this.player.y,
+                vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30,
+                r: Math.random()*15+5, a: 1, c: '#5d2e0a'
             });
-            requestAnimationFrame(animateBg);
         }
-        animateBg();
+        setTimeout(() => document.getElementById('menu-lose').classList.remove('hidden'), 800);
+    },
 
-        // 2. Game Navigation
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+    win() {
+        this.state = 'WIN';
+        this.shake = 20;
+        // Celebration particles
+        for(let i=0; i<100; i++) {
+            this.particles.push({
+                x: Math.random()*this.width, y: this.height + 20,
+                vx: (Math.random()-0.5)*10, vy: -Math.random()*20-10,
+                r: Math.random()*8+2, a: 1, c: '#2ed573'
+            });
+        }
+        setTimeout(() => document.getElementById('menu-win').classList.remove('hidden'), 500);
+    },
+
+    update() {
+        if(this.state !== 'PLAYING' && this.state !== 'WIN') {
+            // Background jiggle for menu
+            this.player.jiggle += 0.05;
+            return;
         }
 
-        function startGame() {
-            board = ["", "", "", "", "", "", "", "", ""];
-            boardCells.forEach(c => { c.innerHTML = ""; c.className = "cell"; });
-            isGameActive = true;
-            statusText.innerText = "YOUR TURN (X)";
-            showScreen('game-screen');
-        }
+        let dx = this.player.targetX - this.player.x;
+        this.player.vx += dx * 0.05;
+        this.player.vx *= 0.8;
+        this.player.x += this.player.vx;
+        this.player.jiggle += 0.2;
 
-        function resetGame() { showScreen('menu-screen'); }
+        if(this.state === 'PLAYING') {
+            const speed = 7 + (this.score * 0.15);
+            if(this.frame % 50 === 0 && this.score < this.winTarget) {
+                const gap = Math.max(140, this.width * 0.45 - (this.score * 1.5));
+                this.walls.push({ y: -100, x: Math.random() * (this.width - gap - 60) + 30, gap, passed: false });
+            }
 
-        // 3. Gameplay Logic
-        boardCells.forEach(c => c.addEventListener('click', (e) => {
-            const idx = e.target.dataset.index;
-            if(!isGameActive || board[idx] !== "") return;
-
-            makeMove(idx, player);
-            if(checkWin(board, player)) return end('win');
-            if(isBoardFull(board)) return end('draw');
-
-            statusText.innerText = "ANAND IS ANALYZING...";
-            isGameActive = false; // Prevent player from clicking during AI turn
-
-            setTimeout(() => {
-                const bestIdx = minimax(board, anand).index;
-                makeMove(bestIdx, anand);
-                if(checkWin(board, anand)) end('lose');
-                else if(isBoardFull(board)) end('draw');
-                else {
-                    statusText.innerText = "YOUR TURN (X)";
-                    isGameActive = true;
+            this.walls.forEach(w => {
+                w.y += speed;
+                if(this.player.alive && Math.abs(this.player.y - (w.y + 35)) < 45) {
+                    if(this.player.x - 22 < w.x || this.player.x + 22 > w.x + w.gap) this.gameOver();
                 }
-            }, 800);
-        }));
+                if(!w.passed && w.y > this.player.y) {
+                    w.passed = true;
+                    this.score++;
+                    document.getElementById('hud-score').innerText = this.score.toString().padStart(2, '0');
+                    document.getElementById('progress-bar').style.width = (this.score / this.winTarget * 100) + "%";
+                    if(this.score >= this.winTarget) this.win();
+                }
+            });
+            this.walls = this.walls.filter(w => w.y < this.height + 100);
+        }
+        
+        // Particles update
+        this.particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.a -= 0.015;
+            if(p.a <= 0) this.particles.splice(i, 1);
+        });
 
-        function makeMove(idx, p) {
-            board[idx] = p;
-            const cell = boardCells[idx];
-            cell.classList.add('taken');
-            if(p === player) {
-                cell.innerText = "X";
-                cell.classList.add('x');
-            } else {
-                const img = document.createElement('img');
-                img.src = "anand.jpg";
-                img.className = "anand-avatar";
-                cell.appendChild(img);
-            }
+        this.frame++;
+    },
+
+    draw() {
+        const c = this.ctx;
+        c.save();
+        if(this.shake > 0) { c.translate((Math.random()-0.5)*this.shake, (Math.random()-0.5)*this.shake); this.shake *= 0.9; }
+
+        c.fillStyle = '#05070a';
+        c.fillRect(0, 0, this.width, this.height);
+
+        // Ambient pipe glow
+        if(this.state === 'PLAYING') {
+            const grd = c.createRadialGradient(this.player.x, this.player.y, 0, this.player.x, this.player.y, 300);
+            grd.addColorStop(0, 'rgba(139, 69, 19, 0.05)');
+            grd.addColorStop(1, 'transparent');
+            c.fillStyle = grd;
+            c.fillRect(0,0,this.width, this.height);
         }
 
-        function end(res) {
-            const title = document.getElementById('res-title');
-            const desc = document.getElementById('res-desc');
-            const panel = document.querySelector('.glass-panel');
+        this.walls.forEach(w => {
+            let grad = c.createLinearGradient(0, w.y, 0, w.y + 70);
+            grad.addColorStop(0, '#1e272e'); grad.addColorStop(0.5, '#485460'); grad.addColorStop(1, '#1e272e');
+            c.fillStyle = grad;
+            c.beginPath();
+            c.roundRect(-100, w.y, w.x + 100, 70, [0, 15, 15, 0]);
+            c.roundRect(w.x + w.gap, w.y, this.width - (w.x + w.gap) + 100, 70, [15, 0, 0, 15]);
+            c.fill();
+            c.strokeStyle = 'rgba(255,255,255,0.2)'; c.lineWidth = 2; c.stroke();
+        });
 
-            if(res === 'win') {
-                title.innerText = "YOU WON!";
-                title.className = "result-title win";
-                desc.innerText = "You have bypassed Anand's logic circuits.";
-                loseSound.play();
-            } else if(res === 'lose') {
-                title.innerText = "DEFEATED";
-                title.className = "result-title lose";
-                desc.innerText = "Anand predicted every move you made.";
-                panel.classList.add('shake');
-                setTimeout(() => panel.classList.remove('shake'), 500);
-            } else {
-                title.innerText = "DRAW";
-                title.className = "result-title";
-                desc.innerText = "A digital stalemate.";
+        this.particles.forEach(p => {
+            c.fillStyle = p.c || '#8b4513';
+            c.globalAlpha = p.a;
+            c.beginPath(); c.arc(p.x, p.y, p.r, 0, Math.PI*2); c.fill();
+        });
+        c.globalAlpha = 1;
+
+        if(this.player.alive && this.state !== 'MENU') {
+            c.save();
+            c.translate(this.player.x, this.player.y);
+            c.rotate(this.player.vx * 0.04);
+            for(let i=0; i<4; i++) {
+                let s = 1 - (i*0.2);
+                let wobble = Math.sin(this.player.jiggle + i) * 5;
+                c.fillStyle = i === 0 ? '#8b4513' : '#5d2e0a';
+                c.beginPath(); c.ellipse(wobble, i*-15, this.player.radius * s, (this.player.radius*0.85)*s, 0, 0, Math.PI*2); c.fill();
             }
-            setTimeout(() => showScreen('result-screen'), 1000);
+            c.fillStyle = '#fff';
+            c.beginPath(); c.arc(-10, -22, 7, 0, Math.PI*2); c.arc(10, -22, 7, 0, Math.PI*2); c.fill();
+            c.fillStyle = '#000';
+            c.beginPath(); c.arc(-10+(this.player.vx*0.5), -22, 3, 0, Math.PI*2); c.arc(10+(this.player.vx*0.5), -22, 3, 0, Math.PI*2); c.fill();
+            c.restore();
         }
+        c.restore();
+    },
 
-        // 4. Intelligence (Minimax)
-        function checkWin(b, p) {
-            const ways = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-            return ways.some(w => w.every(i => b[i] === p));
-        }
-        function isBoardFull(b) { return b.every(s => s !== ""); }
+    loop() {
+        this.update();
+        this.draw();
+        requestAnimationFrame(() => this.loop());
+    }
+};
 
-        function minimax(newBoard, p) {
-            const avail = newBoard.map((s,i) => s === "" ? i : null).filter(s => s !== null);
-            if(checkWin(newBoard, player)) return {score: -10};
-            if(checkWin(newBoard, anand)) return {score: 10};
-            if(avail.length === 0) return {score: 0};
-
-            const moves = [];
-            for(let i=0; i<avail.length; i++) {
-                let move = {index: avail[i]};
-                newBoard[avail[i]] = p;
-                move.score = minimax(newBoard, p === anand ? player : anand).score;
-                newBoard[avail[i]] = "";
-                moves.push(move);
-            }
-            let bestMove;
-            if(p === anand) {
-                let bestScore = -Infinity;
-                moves.forEach((m, i) => { if(m.score > bestScore) { bestScore = m.score; bestMove = i; }});
-            } else {
-                let bestScore = Infinity;
-                moves.forEach((m, i) => { if(m.score < bestScore) { bestScore = m.score; bestMove = i; }});
-            }
-            return moves[bestMove];
-        }
-    </script>
+Game.init();
+</script>
 </body>
 </html>
